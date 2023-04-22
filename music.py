@@ -25,7 +25,7 @@ def count_files(path: str) -> int:
     '''Counting files in folder for future global use'''
     file_count = 0
     for files in os.walk(path):
-        for file in files:
+        for file in files[2]:
             if file.endswith('.mp3'):
                 file_count += 1
     return file_count
@@ -76,6 +76,6 @@ def file_recreation(path: str, file_count: int) -> None:
             os.rename(new_file_path, original_file_path)
 
 
-PATH = 'F://'
+PATH = 'G:\\music3'
 FILE_COUNT = count_files(PATH)
 hello()
