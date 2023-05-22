@@ -1,25 +1,34 @@
 import os
 import uuid
+import argparse
 from mutagen.id3 import ID3, ID3NoHeaderError
 
+parser = argparse.ArgumentParser(description="MP3 management for FM transmitters",
+                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-def hello() -> None:
-    '''Greeting the user and prompting them to choose a function.'''
-    print('Enter 1 for random rename, 2 for tag removing, 3 for file recreation, 4 for everything')
-    inp = int(input())
-    if inp == 1:
+parser.add_argument("-n", "--rename", action="store_true", help="random rename")
+parser.add_argument("-t", "--remove-tags", action="store_true", help="ID3 tag removing")
+parser.add_argument("-c", "--recreate", action="store_true", help="file recreation")
+parser.add_argument("-a", "--all", action="store_true", help="all options")
+parser.add_argument("src", help="Source location")
+
+args = parser.parse_args()
+arg_dict = vars(args)
+
+def start() -> None:
+    '''Choosing a function based on command line arguments.'''
+    if arg_dict["rename"] is True:
         random_rename(PATH, FILE_COUNT)
-    elif inp == 2:
+    elif arg_dict["remove_tags"] is True:
         remove_tags(PATH, FILE_COUNT)
-    elif inp == 3:
+    elif arg_dict["recreate"] is True:
         file_recreation(PATH, FILE_COUNT)
-    elif inp == 4:
+    elif arg_dict["all"] is True:
         random_rename(PATH, FILE_COUNT)
         remove_tags(PATH, FILE_COUNT)
         file_recreation(PATH, FILE_COUNT)
     else:
-        hello()
-
+        parser.print_help()
 
 def count_files(path: str) -> int:
     '''Counting files in folder for future global use'''
@@ -76,6 +85,6 @@ def file_recreation(path: str, file_count: int) -> None:
             os.rename(new_file_path, original_file_path)
 
 
-PATH = 'G:\\music3'
+PATH = arg_dict["src"]
 FILE_COUNT = count_files(PATH)
-hello()
+start()
