@@ -37,4 +37,11 @@ parser.add_argument(
     const="all",
     help="all options",
 )
+parser.add_argument(
+    "--MT",
+    dest="actions",
+    action="append_const",
+    const="MT",
+    help="multithreading",
+)
 parser.add_argument("src", help="Source location")
