@@ -3,7 +3,7 @@
 * Re-creating files to modify their creation/modification dates
 * Deleting ID3 MP3 tags
 
-Has multithreading support which may significantly increase execution time.
+Has multithreading support which may significantly decrease execution time.
 
 ```
 usage: tools.py [-h] [-n] [-t] [-c] [-a] [--MT] src
