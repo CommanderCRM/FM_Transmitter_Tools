@@ -1,11 +1,11 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "33c490d2be4ae6cfbc7e5f758c45dd7dd05aea9ab673c568996de4c3cbf3fb5f"
+            "sha256": "db33f618c46d02e75b6a61d6b13f340287c476dca9286f5f2d1fcdc5645e9904"
         },
         "pipfile-spec": 6,
         "requires": {
-            "python_version": "3.10"
+            "python_version": "3.11"
         },
         "sources": [
             {
@@ -18,11 +18,12 @@
     "default": {
         "mutagen": {
             "hashes": [
-                "sha256:6e5f8ba84836b99fe60be5fb27f84be4ad919bbb6b49caa6ae81e70584b55e58",
-                "sha256:8af0728aa2d5c3ee5a727e28d0627966641fddfe804c23eabb5926a4d770aed5"
+                "sha256:719fadef0a978c31b4cf3c956261b3c58b6948b32023078a2117b1de09f0fc99",
+                "sha256:edd96f50c5907a9539d8e5bba7245f62c9f520aef333d13392a79a4f70aca719"
             ],
             "index": "pypi",
-            "version": "==1.46.0"
+            "markers": "python_version >= '3.7'",
+            "version": "==1.47.0"
         }
     },
     "develop": {}
