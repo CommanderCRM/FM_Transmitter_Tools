@@ -1,31 +1,58 @@
 import os
 import uuid
+import subprocess
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
 from mutagen.id3 import ID3, ID3NoHeaderError
 from tqdm import tqdm
 from argparsing import parser
 
-args = parser.parse_args()
-arg_list = args.actions if args.actions else []
-arg_dict = vars(args)
 
-def start() -> None:
+def start(path: str) -> None:
     """Choosing a function based on command line arguments."""
     multithread = "MT" in arg_list if arg_list else False
     for arg in arg_list:
         if arg == "rename":
-            random_rename(PATH, FILE_COUNT, multithread)
+            random_rename(path, FILE_COUNT, multithread)
         elif arg == "remove_tags":
-            remove_tags(PATH, FILE_COUNT, multithread)
+            remove_tags(path, FILE_COUNT, multithread)
         elif arg == "recreate":
-            file_recreation(PATH, FILE_COUNT, multithread)
+            file_recreation(path, FILE_COUNT, multithread)
         elif arg == "all":
-            random_rename(PATH, FILE_COUNT, multithread)
-            remove_tags(PATH, FILE_COUNT, multithread)
-            file_recreation(PATH, FILE_COUNT, multithread)
+            random_rename(path, FILE_COUNT, multithread)
+            remove_tags(path, FILE_COUNT, multithread)
+            file_recreation(path, FILE_COUNT, multithread)
     if not arg_list:
         parser.print_help()
+        return
+
+
+def format_drive(drive_letter, new_name):
+    """Formatting drive to FAT32 (Windows-only)"""
+    command = f'format {drive_letter}: /FS:FAT32 /V:{new_name} /Q /Y'
+    subprocess.run(command, shell=True, check=True)
+
+
+def create_folder(src_folder: str, new_folder_name: str) -> str:
+    """Create folder in the same place as the existing one, return its path"""
+    parent_dir = os.path.dirname(src_folder)
+    new_folder_path = os.path.join(parent_dir, new_folder_name)
+
+    os.makedirs(new_folder_path, exist_ok=True)
+
+    return new_folder_path
+
+
+def copy_folder(src_folder: str, dest_folder: str):
+    """Copy all files from source to destination"""
+    for src_dir, dirs, files in os.walk(src_folder):
+        for file in tqdm(files, desc=f"Copying files to {dest_folder}"):
+            src_file = os.path.join(src_dir, file)
+            dst_file = os.path.join(dest_folder, file)
+            if os.path.exists(dst_file):
+                os.remove(dst_file)
+            shutil.copy(src_file, dest_folder)
 
 
 def count_files(path: str) -> int:
@@ -36,7 +63,6 @@ def count_files(path: str) -> int:
             if file.endswith(".mp3"):
                 file_count += 1
     return file_count
-
 
 def rename_file(file_info: tuple, pbar: tqdm) -> None:
     """Renaming files using UUID4"""
@@ -154,6 +180,19 @@ def file_recreation(path: str, file_count: int, multithread: bool = False) -> No
     pbar.close()
 
 
+args = parser.parse_args()
+arg_list = args.actions if args.actions else []
+arg_dict = vars(args)
+
 PATH = arg_dict["src"]
 FILE_COUNT = count_files(PATH)
-start()
+
+if args.drive and args.new_name:
+    format_drive(args.drive, args.new_name)
+    new_folder_path = create_folder(PATH, args.new_name)
+    copy_folder(PATH, new_folder_path)
+    start(new_folder_path)
+    copy_folder(new_folder_path, args.drive + ":\\")
+else:
+    print("Drive letter and new name must be provided")
+    parser.print_help()

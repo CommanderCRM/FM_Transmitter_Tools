@@ -38,6 +38,15 @@ parser.add_argument(
     help="all options",
 )
 parser.add_argument(
+    "-d",
+    "--drive",
+    help="Drive letter to be formatted",
+)
+parser.add_argument(
+    "--new_name",
+    help="New drive name and new folder name",
+)
+parser.add_argument(
     "--MT",
     dest="actions",
     action="append_const",
