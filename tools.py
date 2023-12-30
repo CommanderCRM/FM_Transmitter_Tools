@@ -47,7 +47,7 @@ def create_folder(src_folder: str, new_folder_name: str) -> str:
 def copy_folder(src_folder: str, dest_folder: str):
     """Copy all files from source to destination"""
     for src_dir, dirs, files in os.walk(src_folder):
-        for file in tqdm(files, desc=f"Copying files to {dest_folder}"):
+        for file in tqdm(files, desc=f"Copying files to {dest_folder}", dynamic_ncols=True, ascii=" ="):
             src_file = os.path.join(src_dir, file)
             dst_file = os.path.join(dest_folder, file)
             if os.path.exists(dst_file):
@@ -83,7 +83,7 @@ def random_rename(path: str, file_count: int, multithread: bool = False) -> None
         if file.endswith(".mp3")
     ]
 
-    pbar = tqdm(total=len(files_to_rename), desc="Renaming files", dynamic_ncols=True)
+    pbar = tqdm(total=len(files_to_rename), desc="Renaming files", dynamic_ncols=True, ascii=" =")
 
     if multithread:
         with ThreadPoolExecutor() as executor:
@@ -119,7 +119,7 @@ def remove_tags(path: str, file_count: int, multithread: bool = False) -> None:
         if file.endswith(".mp3")
     ]
 
-    pbar = tqdm(total=len(files_to_process), desc="Removing tags from files", dynamic_ncols=True)
+    pbar = tqdm(total=len(files_to_process), desc="Removing tags from files", dynamic_ncols=True, ascii=" =")
 
     if multithread:
         with ThreadPoolExecutor() as executor:
@@ -167,7 +167,7 @@ def file_recreation(path: str, file_count: int, multithread: bool = False) -> No
     processed_files = set()
     lock = Lock()
 
-    pbar = tqdm(total=len(files_to_process), desc="Recreating files", dynamic_ncols=True)
+    pbar = tqdm(total=len(files_to_process), desc="Recreating files", dynamic_ncols=True, ascii=" =")
 
     if multithread:
         with ThreadPoolExecutor() as executor:
@@ -193,7 +193,7 @@ if args.drive and args.new_name:
     copy_folder(PATH, new_folder_path)
     start(new_folder_path)
     copy_folder(new_folder_path, args.drive + ":\\")
-    os.unlink(new_folder_path)
+    shutil.rmtree(new_folder_path)
 else:
     print("Drive letter and new name must be provided")
     parser.print_help()
