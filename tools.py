@@ -45,8 +45,9 @@ def create_folder(src_folder: str, new_folder_name: str) -> str:
 
 
 def copy_folder(src_folder: str, dest_folder: str):
-    """Copy all files from source to destination"""
+    """Copy all .mp3 files from source to destination"""
     for src_dir, dirs, files in os.walk(src_folder):
+        files = [file for file in files if file.endswith(".mp3")]
         for file in tqdm(files, desc=f"Copying files to {dest_folder}", dynamic_ncols=True, ascii=" ="):
             src_file = os.path.join(src_dir, file)
             dst_file = os.path.join(dest_folder, file)
