@@ -128,7 +128,7 @@ def remove_tags(path: str, file_count: int, multithread: bool = False) -> None:
                 future.result()
     else:
         for file_info in files_to_process:
-            rename_file(file_info, pbar)
+            remove_tags_file(file_info, pbar)
 
     pbar.close()
 
@@ -193,6 +193,7 @@ if args.drive and args.new_name:
     copy_folder(PATH, new_folder_path)
     start(new_folder_path)
     copy_folder(new_folder_path, args.drive + ":\\")
+    os.unlink(new_folder_path)
 else:
     print("Drive letter and new name must be provided")
     parser.print_help()
