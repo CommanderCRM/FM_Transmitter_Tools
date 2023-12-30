@@ -14,15 +14,15 @@ def start(path: str) -> None:
     multithread = "MT" in arg_list if arg_list else False
     for arg in arg_list:
         if arg == "rename":
-            random_rename(path, FILE_COUNT, multithread)
+            random_rename(path, multithread)
         elif arg == "remove_tags":
-            remove_tags(path, FILE_COUNT, multithread)
+            remove_tags(path, multithread)
         elif arg == "recreate":
-            file_recreation(path, FILE_COUNT, multithread)
+            file_recreation(path, multithread)
         elif arg == "all":
-            random_rename(path, FILE_COUNT, multithread)
-            remove_tags(path, FILE_COUNT, multithread)
-            file_recreation(path, FILE_COUNT, multithread)
+            random_rename(path, multithread)
+            remove_tags(path, multithread)
+            file_recreation(path, multithread)
     if not arg_list:
         parser.print_help()
         return
@@ -55,18 +55,14 @@ def copy_folder(src_folder: str, dest_folder: str):
             shutil.copy(src_file, dest_folder)
 
 
-def count_files(path: str) -> int:
-    """Counting files in folder for future global use"""
-    file_count = 0
-    for files in os.walk(path):
-        for file in files[2]:
-            if file.endswith(".mp3"):
-                file_count += 1
-    return file_count
+def get_file_info(path: str) -> list:
+    """Getting .mp3 file info (path, file)"""
+    return [(path, file) for file in os.listdir(path) if file.endswith(".mp3")]
+
 
 def rename_file(file_info: tuple, pbar: tqdm) -> None:
     """Renaming files using UUID4"""
-    path, file, _, __ = file_info
+    path, file = file_info
     file_extension = os.path.splitext(file)[1]
     new_filename = str(uuid.uuid4()) + file_extension
 
@@ -75,31 +71,10 @@ def rename_file(file_info: tuple, pbar: tqdm) -> None:
     pbar.update()
 
 
-def random_rename(path: str, file_count: int, multithread: bool = False) -> None:
-    """Multithreading logic for file renaming"""
-    files_to_rename = [
-        (path, file, idx + 1, file_count)
-        for idx, file in enumerate(os.listdir(path))
-        if file.endswith(".mp3")
-    ]
-
-    pbar = tqdm(total=len(files_to_rename), desc="Renaming files", dynamic_ncols=True, ascii=" =")
-
-    if multithread:
-        with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(rename_file, file_info, pbar) for file_info in files_to_rename]
-            for future in futures:
-                future.result()
-    else:
-        for file_info in files_to_rename:
-            rename_file(file_info, pbar)
-
-    pbar.close()
-
-
 def remove_tags_file(file_info: tuple, pbar: tqdm) -> None:
     """Removing all possible MP3 tags"""
-    file_path, _, __ = file_info
+    path, file = file_info
+    file_path = os.path.join(path, file)
 
     try:
         audio = ID3(file_path)
@@ -111,31 +86,9 @@ def remove_tags_file(file_info: tuple, pbar: tqdm) -> None:
         pbar.update()
 
 
-def remove_tags(path: str, file_count: int, multithread: bool = False) -> None:
-    """Multithreading logic for tag removing"""
-    files_to_process = [
-        (os.path.join(path, file), idx + 1, file_count)
-        for idx, file in enumerate(os.listdir(path))
-        if file.endswith(".mp3")
-    ]
-
-    pbar = tqdm(total=len(files_to_process), desc="Removing tags from files", dynamic_ncols=True, ascii=" =")
-
-    if multithread:
-        with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(remove_tags_file, file_info, pbar) for file_info in files_to_process]
-            for future in futures:
-                future.result()
-    else:
-        for file_info in files_to_process:
-            remove_tags_file(file_info, pbar)
-
-    pbar.close()
-
-
-def file_recreation_file(file_info: tuple, processed_files: set, lock: Lock, pbar: tqdm) -> None:
+def file_recreation_file(file_info: tuple, pbar: tqdm, processed_files: set, lock: Lock) -> None:
     """Modifying date properties by recreating files"""
-    path, _, __, file = file_info
+    path, file = file_info
 
     with lock:
         if file in processed_files:
@@ -157,27 +110,41 @@ def file_recreation_file(file_info: tuple, processed_files: set, lock: Lock, pba
         pbar.update()
 
 
-def file_recreation(path: str, file_count: int, multithread: bool = False) -> None:
-    """Multithreading logic for file recreation"""
-    files_to_process = [
-        (path, file_count, idx + 1, file)
-        for idx, file in enumerate(os.listdir(path))
-        if file.endswith(".mp3")
-    ]
-    processed_files = set()
-    lock = Lock()
-
-    pbar = tqdm(total=len(files_to_process), desc="Recreating files", dynamic_ncols=True, ascii=" =")
+def process_files(files_to_process: list, process_file_func: callable, description: str, multithread: bool, *args, **kwargs) -> None:
+    """Function to handle processing multiple files (either with multithreading or not)"""
+    pbar = tqdm(total=len(files_to_process), desc=description, dynamic_ncols=True, ascii=" =")
 
     if multithread:
         with ThreadPoolExecutor() as executor:
-            for file_info in files_to_process:
-                executor.submit(file_recreation_file, file_info, processed_files, lock, pbar)
+            futures = [executor.submit(process_file_func, file_info, pbar, *args, **kwargs) for file_info in files_to_process]
+            for future in futures:
+                future.result()
     else:
         for file_info in files_to_process:
-            file_recreation_file(file_info, processed_files, lock, pbar)
+            process_file_func(file_info, pbar, *args, **kwargs)
 
     pbar.close()
+
+
+def random_rename(path: str, multithread: bool) -> None:
+    """Call renaming function"""
+    files_to_process = get_file_info(path)
+    process_files(files_to_process, rename_file, "Renaming files", multithread)
+
+
+def remove_tags(path: str, multithread: bool) -> None:
+    """Call removing tags function"""
+    files_to_process = get_file_info(path)
+    process_files(files_to_process, remove_tags_file, "Removing tags from files", multithread)
+
+
+def file_recreation(path: str, multithread: bool) -> None:
+    """Call recreate files function"""
+    files_to_process = get_file_info(path)
+    processed_files = set()
+    lock = Lock()
+    process_files(files_to_process, file_recreation_file, "Recreating files", multithread,
+                   processed_files=processed_files, lock=lock)
 
 
 args = parser.parse_args()
@@ -185,7 +152,6 @@ arg_list = args.actions if args.actions else []
 arg_dict = vars(args)
 
 PATH = arg_dict["src"]
-FILE_COUNT = count_files(PATH)
 
 if args.drive and args.new_name:
     format_drive(args.drive, args.new_name)
