@@ -1,11 +1,13 @@
 import os
-import uuid
-import subprocess
 import shutil
+import subprocess
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from threading import Lock
+
 from mutagen.id3 import ID3, ID3NoHeaderError
 from tqdm import tqdm
+
 from argparsing import parser
 
 
@@ -30,7 +32,7 @@ def start(path: str) -> None:
 
 def format_drive(drive_letter, new_name):
     """Formatting drive to FAT32 (Windows-only)"""
-    command = f'format {drive_letter}: /FS:FAT32 /V:{new_name} /Q /Y'
+    command = f"format {drive_letter}: /FS:FAT32 /V:{new_name} /Q /Y"
     subprocess.run(command, shell=True, check=True)
 
 
@@ -46,9 +48,14 @@ def create_folder(src_folder: str, new_folder_name: str) -> str:
 
 def copy_folder(src_folder: str, dest_folder: str):
     """Copy all .mp3 files from source to destination"""
-    for src_dir, dirs, files in os.walk(src_folder):
+    for src_dir, _dirs, files in os.walk(src_folder):
         files = [file for file in files if file.endswith(".mp3")]
-        for file in tqdm(files, desc=f"Copying files to {dest_folder}", dynamic_ncols=True, ascii=" ="):
+        for file in tqdm(
+            files,
+            desc=f"Copying files to {dest_folder}",
+            dynamic_ncols=True,
+            ascii=" =",
+        ):
             src_file = os.path.join(src_dir, file)
             dst_file = os.path.join(dest_folder, file)
             if os.path.exists(dst_file):
@@ -87,7 +94,9 @@ def remove_tags_file(file_info: tuple, pbar: tqdm) -> None:
         pbar.update()
 
 
-def file_recreation_file(file_info: tuple, pbar: tqdm, processed_files: set, lock: Lock) -> None:
+def file_recreation_file(
+    file_info: tuple, pbar: tqdm, processed_files: set, lock: Lock
+) -> None:
     """Modifying date properties by recreating files"""
     path, file = file_info
 
@@ -111,13 +120,25 @@ def file_recreation_file(file_info: tuple, pbar: tqdm, processed_files: set, loc
         pbar.update()
 
 
-def process_files(files_to_process: list, process_file_func: callable, description: str, multithread: bool, *args, **kwargs) -> None:
+def process_files(
+    files_to_process: list,
+    process_file_func: callable,
+    description: str,
+    multithread: bool,
+    *args,
+    **kwargs,
+) -> None:
     """Function to handle processing multiple files (either with multithreading or not)"""
-    pbar = tqdm(total=len(files_to_process), desc=description, dynamic_ncols=True, ascii=" =")
+    pbar = tqdm(
+        total=len(files_to_process), desc=description, dynamic_ncols=True, ascii=" ="
+    )
 
     if multithread:
         with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(process_file_func, file_info, pbar, *args, **kwargs) for file_info in files_to_process]
+            futures = [
+                executor.submit(process_file_func, file_info, pbar, *args, **kwargs)
+                for file_info in files_to_process
+            ]
             for future in futures:
                 future.result()
     else:
@@ -136,7 +157,9 @@ def random_rename(path: str, multithread: bool) -> None:
 def remove_tags(path: str, multithread: bool) -> None:
     """Call removing tags function"""
     files_to_process = get_file_info(path)
-    process_files(files_to_process, remove_tags_file, "Removing tags from files", multithread)
+    process_files(
+        files_to_process, remove_tags_file, "Removing tags from files", multithread
+    )
 
 
 def file_recreation(path: str, multithread: bool) -> None:
@@ -144,8 +167,14 @@ def file_recreation(path: str, multithread: bool) -> None:
     files_to_process = get_file_info(path)
     processed_files = set()
     lock = Lock()
-    process_files(files_to_process, file_recreation_file, "Recreating files", multithread,
-                   processed_files=processed_files, lock=lock)
+    process_files(
+        files_to_process,
+        file_recreation_file,
+        "Recreating files",
+        multithread,
+        processed_files=processed_files,
+        lock=lock,
+    )
 
 
 args = parser.parse_args()

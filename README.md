@@ -1,10 +1,10 @@
 # FM_Transmitter_Tools
 
-* Formatting USB drive
-* Copying files to another folder or USB drive
-* Giving random (UUID4) names to all files in the folder
-* Re-creating files to modify their creation/modification dates
-* Deleting ID3 MP3 tags
+- Formatting USB drive
+- Copying files to another folder or USB drive
+- Giving random (UUID4) names to all files in the folder
+- Re-creating files to modify their creation/modification dates
+- Deleting ID3 MP3 tags
 
 Has multithreading support which may significantly decrease execution time.
 
