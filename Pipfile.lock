@@ -26,12 +26,12 @@
         },
         "mutagen": {
             "hashes": [
-                "sha256:719fadef0a978c31b4cf3c956261b3c58b6948b32023078a2117b1de09f0fc99",
-                "sha256:edd96f50c5907a9539d8e5bba7245f62c9f520aef333d13392a79a4f70aca719"
+                "sha256:4f077fe87d3fc7fba259aa63d8c026b18382ca6a42ef37c61e16f1b1b5b82fe7",
+                "sha256:8f95637ab9f6f305cec6bd1294e197debe207998e3e068596563c74f86b0a173"
             ],
             "index": "pypi",
-            "markers": "python_version >= '3.7'",
-            "version": "==1.47.0"
+            "markers": "python_version >= '3.10' and python_version < '4'",
+            "version": "==1.48.1"
         },
         "tqdm": {
             "hashes": [
